@@ -1,0 +1,156 @@
+sid
+sname
+sdes
+
+
+DB_DATABASE=student
+
+Models-----student.php
+//php artisan make:model demo
+
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class student extends Model
+{
+    use HasFactory;
+    public $table='stud';
+    public $timestamps=false;
+}
+
+
+
+welcome.blade.php
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+</head>
+<body>
+   <form method="post" action={{URL::to('insertData/')}}>
+    @csrf
+      <table>
+        <tr>
+          <td><h1>Student Record</h1></td>
+        </tr>
+        <input type="hidden" name="sid" @isset($rec) value={{$rec[0]->sid}}@endisset>
+        <tr>
+          <td>Student Name : </td>
+          <td><input type="text" name="sname" @isset($rec) value={{$rec[0]->sname}}@endisset></td>
+        </tr>
+        <tr>
+           <td>student Description : </td>
+           <td><input type="text" name="sdes" @isset($rec) value={{$rec[0]->des}} @endisset></td>
+        </tr>
+        <tr>
+           <td><input type="submit" name="operation" value="insert"></td>
+           <td><input type="submit" name="operation" value="update"></td>
+        </tr>
+      </table>
+      <br/>
+      <br/>
+      <table>
+        <tr>
+          <th>Student Name</th>
+          <th>Student Description</th>
+          <th>Delete</th>
+          <th>Update</th>
+        </tr>
+        @foreach ($data as $d)
+            <tr>
+              <td>{{$d->sname}}</td>
+              <td>{{$d->des}}</td>
+              <td><a href={{URL::to('delete/'.$d->sid)}}>Delete</a></td>
+              <td><a href={{URL::to('update/'.$d->sid)}}>Update</a></td
+            </tr>
+        @endforeach
+      </table>
+   </form>
+</body>
+</html>
+
+
+Controller------DBStudent.php
+//php artisan make:controller demo
+
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
+class DBStudent extends Controller
+{
+    function insertData(Request $req){
+
+        if($req->operation=="insert")
+        {
+           DB::table('stud')->insert([
+                'sname'=>$req->sname,
+                'des'=>$req->sdes
+           ]);
+           return redirect('readData');
+        }
+
+        if($req->operation=="update"){
+            db::table('stud')->where('sid',$req->sid)->update([
+                'sname'=>$req->sname,
+                'des'=>$req->sdes
+            ]);
+            return redirect('readData');
+        }
+    }
+
+    function readData(Request $req){
+        $data=DB::table('stud')->get();
+        return view('welcome',['data'=>$data]);
+    }
+
+    function deleteData(Request $req,$sid){
+        $data=DB::table('stud')->where('sid',$sid)->delete();
+        return redirect('readData');
+    }
+
+    function upData(Request $req,$sid){
+        $data=DB::table('stud')->get();
+        $rec=DB::table('stud')->where('sid',$sid)->get();
+        //print_r($rec);
+        return view('welcome',['data'=>$data,'rec'=>$rec]);
+    }
+}
+
+
+routes------web.php
+
+<?php
+
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\DBstudent;
+
+
+
+Route::get('/', function () {
+    return view('welcome');
+});
+
+Route::post('insertData',[DBStudent::class,'insertData']);
+Route::get('/',[DBStudent::class,'readData']);
+Route::get('readData',[DBStudent::class,'readData']);
+
+Route::get('delete/{sid}',[DBStudent::class,'deleteData']);
+Route::get('update/{sid}',[DBstudent::class,'upData']);
+// get ->database mathi data lava mate,dis
+// post -> database ni under data insert kare,del,update
+// view -> page ne view karva
+
+
+
+
+
+
+
