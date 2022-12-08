@@ -1,0 +1,160 @@
+table--->user
+uid (AI)   10
+name    50
+password   50
+image  100
+
+
+
+//usercontroller.php
+
+
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
+class usercontroller extends Controller
+{
+    function insert(Request $req)
+    {
+        if($req->operation=='Insert')
+        {
+            $file=request()->image;
+            $filename=$req->image->getClientOriginalName();
+            $req->image->move(public_path('uploads'),$filename);
+            
+            db::table('user')->insert([
+                'name'=>$req->name,
+                'password'=>$req->password,
+                'image'=>$filename,
+                'rno'=>$req->rno,
+                'course'=>$req->course
+
+
+            ]);
+            return redirect('/');
+        }
+    }
+
+    function viewdata()
+    {
+        $data=db::table('user')->get();
+        return view('userhome',['Data'=>$data]);
+    }
+
+}
+
+
+
+//userhome.blade.php
+
+<form method="post" action="insert" enctype="multipart/form-data" align="center">
+    @csrf  
+        <input type="text" name="name" placeholder="enter Name"> <br><br>
+        <input type="password" name="password" placeholder="enter password"><br><br>
+    
+
+        <input type="file" name="image"><br><br>
+        <input type="text" name="rno" placeholder="enter Roll No"><br><br>
+        <input type="text" name="course" placeholder="enter Course"><br><br>
+        <input type="submit" name="operation" value="Insert">  
+</form>
+
+<table>
+    <tr>
+        <td>uid</td>
+        <td>name</td>
+        <td>password</td>
+        <td>image</td>
+        <td>rno</td>
+        <td>course</td>
+
+    </tr>
+
+
+    @foreach ($Data as $d)
+    <tr>
+        <td>{{$d->uid}}</td>
+        <td>{{$d->name}}</td>
+        <td>{{$d->password}}</td>
+        <td><img src="{{asset('/uploads/'.$d->image)}}" height="100px"></td>
+        <td>{{$d->rno}}</td>
+        <td>{{$d->course}}</td>
+
+    </tr>
+    @endforeach
+</table>
+
+
+
+//web.php
+
+<?php
+
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\usercontroller;
+
+
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+|
+| Here is where you can register web routes for your application. These
+| routes are loaded by the RouteServiceProvider within a group which
+| contains the "web" middleware group. Now create something great!
+|
+*/
+
+// Route::get('/', function () {
+//     return view('userhome');
+// });
+
+
+Route::view('/','userhome');
+// Route::view('welcome','welcome');
+
+Route::post('insert',[usercontroller::class,'insert']);
+
+
+Route::get('/',[usercontroller::class,'viewdata']);
+
+
+
+
+krupa's search
+
+
+function viewdata(){
+        $data=db::table('product')->get();
+        $sdata=db::table('product')->where('name','=','krupa')->get();
+        return view('home',['Data'=>$data],['Sdata'=>$sdata]);
+       }
+
+
+<table border="2"  align="center" >
+        <tr>
+            <td>id</td>
+            <td>name</td>
+            <td>price</td>
+            <td>photo</td>
+            <td>edit</td>
+            <td>delete</td>
+        </tr>
+        @foreach($Sdata as $sd)
+        <form >
+        <tr>
+            <td>{{$sd->pid}}</td>
+            <td>{{$sd->name}}</td>
+            <td>{{$sd->price}}</td>
+            <td><img src="{{asset('/uploads/'.$d->photo)}}" height="60px" width="60px"></td>
+            <td><input type="submit" name="opt" value="edit"></td>
+            <td><input type="submit" name="opt" value="delete"></td>
+        </tr>
+        </form>
+        @endforeach
+    </table>
+
