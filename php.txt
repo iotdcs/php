@@ -1,0 +1,95 @@
+usercontroller.php
+
+
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+class usercontroller extends Controller
+{
+    function insert(Request $req)
+    {
+        if($req->operation=='Insert')
+        {
+            $file=request()->image;
+            $filename=$req->image->getClientOriginalName();
+            $req->image->move(public_path('uploads'),$filename);
+            db::table('user')->insert([
+                'name'=>$req->name,
+                'password'=>$req->password,
+                'image'=>$filename
+
+            ]);
+            return redirect('/');
+        }
+    }
+
+
+    function viewdata()
+    {
+        $data=db::table('user')->get();
+        return view('userhome',['Data'=>$data]);
+    }
+}
+
+
+
+
+userhome.blade.php
+
+
+
+    <form method="post" action="insert" enctype="multipart/form-data" align="center">
+    @csrf  
+        <input type="text" name="name" placeholder="enter Name"> <br><br>
+        <input type="password" name="password" placeholder="enter password"><br><br>
+        <input type="file" name="image"><br><br>
+        <input type="submit" name="operation" value="Insert">  
+</form>
+
+<table>
+    <tr>
+        <td>uid</td>
+        <td>name</td>
+        <td>password</td>
+        <td>image</td>
+    </tr>
+
+
+    @foreach ($Data as $d)
+    <tr>
+        <td>{{$d->uid}}</td>
+        <td>{{$d->name}}</td>
+        <td>{{$d->password}}</td>
+        <td><img src="{{asset('/uploads/'.$d->image)}}" height="100px"></td>
+    </tr>
+    @endforeach
+</table>
+
+
+
+
+
+web.php
+
+
+<?php
+
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\usercontroller;
+
+
+// Route::get('/', function () {
+//     return view('userhome');
+// });
+
+
+Route::view('/','userhome');
+// Route::view('welcome','welcome');
+
+Route::post('insert',[usercontroller::class,'insert']);
+
+
+Route::get('/',[usercontroller::class,'viewdata']);
