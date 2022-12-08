@@ -1,0 +1,170 @@
+//Database
+
+laravel--->product
+
+pid  (AI)
+name
+price
+photo
+
+
+
+//php artisan serve
+//php artisan make:controller demo
+//productcontroller.php
+
+
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
+class productcontroller extends Controller
+{
+    public function index(){
+        $product = DB::table('product')->select('name', 'price as p')->get();
+        $table="<table border='1' width='300'";
+        $table.="<tr><th>Name</th><th>Email</th></tr>";
+        foreach($product as $p){
+        $table.="<tr><td>$p->name</td><td>$p->p</td></tr>";
+        }
+        $table.="</table>";
+        echo $table;
+        }
+
+    function insert(Request $req){
+        if($req->operation=='Insert'){
+            
+            $file=request()->photo;
+           $filename=$req->photo->getClientOriginalName();
+           $req->photo->move(public_path('uploads'),$filename);
+
+           
+           //  $pro->photo=$req->photo;
+           
+            db::table('product')->insert([
+                'name'=>$req->name,
+                'price'=>$req->price,
+                'photo'=>$filename
+            ]);
+            return redirect('/');
+           }
+           else if($req->operation=='Update'){
+              db::table('product')->where('pid',$req->pid)->update(['name'=>$req->name,'price'=>$req->price]);
+              return redirect('/');
+           }
+      
+       }
+       function viewdata(){
+        $data=db::table('product')->get();
+        return view('home',['Data'=>$data]);
+       }
+
+       function editdelete(Request $req,$pid){
+        if($req->opt=='delete'){
+            db::table('product')->where('pid',$pid)->delete();
+            return redirect('/');
+        }
+        else if($req->opt=='edit'){
+            $data= db::table('product')->get();
+            $record= db::table('product')->where('pid',$pid)->get();
+            return view('home',['Data'=>$data,'Record'=>$record]);
+        }
+       }
+}
+
+
+
+//home.blade.php
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QUERY BUILDER</title>
+</head>
+<body>
+    <form method="post" action="insert" enctype="multipart/form-data" align="center">
+        @csrf
+        <h1>Product Management</h1>
+
+        <input type="hidden" name="pid" @isset($Record) value={{$Record[0]->pid}} @endisset><br>
+
+        Enter Name: <input type="text" name="name" @isset($Record) value={{$Record[0]->name}} @endisset placeholder="product name"><br><br>
+        Enter Price: <input type="number" name="price" @isset($Record) value={{$Record[0]->price}} @endisset placeholder="product price"><br><br>
+        <input type="file" name="photo" ><br><br>
+        <!-- <input type="text" name="photo" value="" placeholder="product photo"><br> -->
+
+        <input type="submit" name="operation" value="Insert">
+        <input type="submit" name="operation" value="Update"><br><br>
+
+    </form>
+    <table border="2" align="center">
+        <br\>
+        <tr>
+            <td>id</td>
+            <td>name</td>
+            <td>price</td>
+            <td>photo</td>
+            <td>edit</td>
+            <td>delete</td>
+        </tr>
+        @foreach($Data as $d)
+        <form method="get" action={{URL::to("editordel$d->pid")}}>
+        <tr>
+            <td>{{$d->pid}}</td>
+            <td>{{$d->name}}</td>
+            <td>{{$d->price}}</td>
+            <td><img src="{{asset('/uploads/'.$d->photo)}}" height="60px" width="60px"></td>
+            <td><input type="submit" name="opt" value="edit"></td>
+            <td><input type="submit" name="opt" value="delete"></td>
+        </tr>
+        </form>
+        @endforeach
+    </table>
+
+    
+
+
+</body>
+</html>
+
+
+//web.php
+
+<?php
+
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\productcontroller;
+
+
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+|
+| Here is where you can register web routes for your application. These
+| routes are loaded by the RouteServiceProvider within a group which
+| contains the "web" middleware group. Now create something great!
+|
+*/
+
+Route::get('/', function () {
+    return view('home');
+});
+Route::view('/','home');
+
+
+Route::post('insert',[productcontroller::class,'insert']);
+
+Route::get('/',[productcontroller::class,'viewdata']);
+
+// editordel
+Route::get('editordel{pid}',[productcontroller::class,'editdelete']);
+
+
+
