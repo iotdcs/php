@@ -1,0 +1,411 @@
+datbase--->customer
+
+
+table-->admin
+username varchar(50)
+password varchar(50)
+
+
+table--->cust
+name varchar(50)
+email var
+pass   var
+age     int
+contact   var
+
+
+table--->product
+id (AI)
+pname    varchar 50
+qty   varchar 50
+
+
+=====admin===
+
+====controller->admincontroller.php
+
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
+
+class admincontroller extends Controller
+{
+    function logincheck(Request $req){
+     $uname=$req->txtusername;
+     $pass=$req->txtpassword;
+     $flag=0;
+     $data=DB::table('admin')->get();
+     foreach($data as $d){
+
+        if(strcmp($d->username,$uname)==0 && strcmp($d->password,$pass)==0){
+            $flag=1;
+            break;
+        }
+     }
+       if($flag==1){
+        return redirect("product");
+       }else{
+        echo"<script>alert('login faild')</script>";
+       }
+
+       
+    }
+
+    function product(){
+        $data=DB::table('product')->get();
+        return view("/admin/productregister",["Product"=>$data]);
+    }
+
+    function productregister(Request $req){
+
+        DB::table('product')->insert([
+          "pname"=>$req->txtpname,
+          "qty"=>$req->txtqty
+        ]);
+
+        return redirect("product");
+
+    }
+
+    function delete($id){
+        DB::table('product')->where("id",$id)->delete();
+        return redirect("product");
+    }
+
+      function edit($id){
+        $data=DB::table('product')->find($id);
+        return view("/admin/editform",["Data"=>$data]);
+      }  
+      
+      function update(Request $req){
+        DB::table('product')->where("id",$req->txtid)->update([
+            "pname"=>$req->txtpname,
+            "qty"=>$req->txtqty
+        ]);
+        
+        return redirect("product");
+      }
+
+    }
+
+
+===Controller-->customer.php
+
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
+class customer extends Controller
+{
+    
+    function register(Request $req){
+      
+           DB::table('cust')->insert([
+            'name'=>$req->txtname,
+            'email'=>$req->txtemail,
+            'pass'=>$req->txtpass,
+            'age'=>$req->txtage,
+            'contact'=>$req->txtnumber,
+           ]);
+       
+          return redirect('/customerlogin');        
+       }
+    
+
+
+    function index(){
+        return view("/customer/customerreg");
+    }
+    function productdisplay(){
+        $data=DB::table('product')->get();
+        return view("/customer/product",["Products"=>$data]);
+    }
+    function loginchecktwo(Request $req){
+        $uname=$req->txtusername;
+        $pass=$req->txtpassword;
+        $flag=0;
+        $data=DB::table('cust')->get();
+        foreach($data as $d){
+                if(strcmp($d->email,$uname)==0 && strcmp($d->pass,$pass)==0){
+                        $flag=1;
+                        break;
+                }
+
+        }
+        if($flag==1){
+            echo'<script>alert("login sucess")</script>';
+
+            return redirect("productdisplay");
+        }else{
+            echo'<script>alert("login fail")</script>';
+        }    
+
+        
+    }
+    
+}
+
+===views->-->admin-->login.blade.php
+<html>
+    <head>
+
+    </head>
+    <body>
+        <center>
+            <h1>Admin Login Page</h1>
+            <form method="post" action="{{URL::to("logincheck")}}" enctype="multipart/form-data">
+                @csrf
+                <table>
+                <tr>
+                    <td>UserName:</td>
+                    <td><input type="text" name="txtusername"></td>
+                </tr>
+                <tr>
+                    <td>Password:</td>
+                    <td><input type="password" name="txtpassword"></td>
+                </tr>
+                <tr>
+                    <td><input type="submit" name="operation" value="login"></td>
+            
+                </tr>
+                </table>
+            </form>
+        </center>
+    </body>
+</html>
+
+===admin==>editform.blade.php
+<html>
+    <head>
+
+    </head>
+    <body>
+        <center>
+            <h1>Product Registration Page</h1>
+            <form method="POST" action="{{URL::to("update")}}" enctype="multipart/form-data">
+                @csrf
+                <table>
+                <tr>
+                    <td>Product name:</td>
+                    <td><input type="text" name="txtpname" value="{{$Data->pname}}"></td>
+                    <td><input type="hidden" name="txtid" value="{{$Data->id}}"></td>
+  
+                </tr>
+                <tr>
+                    <td>Product Qut:</td>
+                    <td><input type="text" name="txtqty" value="{{$Data->qty}}"></td>
+                </tr>
+              
+                <tr>
+                    <td><input type="submit" name="submit"></td>
+            
+                </tr>
+                <table>
+                </form>
+         
+        </center>
+    </body>
+</html>
+
+===admin--->productregister.blade.php
+
+<html>
+    <head>
+
+    </head>
+    <body>
+        <center>
+            <h1>Product Registration Page</h1>
+            <form method="POST" action="{{URL::to("productregister")}}" enctype="multipart/form-data">
+                @csrf
+                <table>
+                <tr>
+                    <td>Product name:</td>
+                    <td><input type="text" name="txtpname"></td>
+                </tr>
+                <tr>
+                    <td>Product Qut:</td>
+                    <td><input type="text" name="txtqty"></td>
+                </tr>
+              
+                <tr>
+                    <td><input type="submit" name="operation" value="register"></td>
+            
+                </tr>
+                <table>
+                </form>
+         
+        </center>
+    </body>
+</html>
+
+
+
+<table border="1">
+    <tr>
+        <td>Id</td>
+        <td>Product name</td>
+        <td>Qut</td>
+    </tr>
+    @foreach($Product as $p)
+    <tr>
+        <td>{{$p->id}}</td>
+        <td>{{$p->pname}}</td>
+        <td>{{$p->qty}}</td>
+        <td><a href="edit/{{$p->id}}">Edit</td>
+        <td><a href="delete/{{$p->id}}">Delete</td>
+    </tr>
+    @endforeach
+</table>
+
+===>customer
+
+==>customerreg.blade.php
+<html>
+    <head>
+
+    </head>
+    <body>
+        <center>
+            <h1>Customer Registration Page</h1>
+            <form method="POST" action="{{URL::to("register")}}" enctype="multipart/form-data">
+                @csrf
+                <table>
+                <tr>
+                    <td>Name:</td>
+                    <td><input type="text" name="txtname"></td>
+                </tr>
+                <tr>
+                    <td>Email:</td>
+                    <td><input type="Email" name="txtemail"></td>
+                </tr>
+                <tr>
+                    <td>Password:</td>
+                    <td><input type="password" name="txtpass"></td>
+                </tr>
+                <tr>
+                    <td>Age:</td>
+                    <td><input type="text" name="txtage"></td>
+                </tr>
+                <tr>
+                    <td>Contact No:</td>
+                    <td><input type="number" name="txtnumber"></td>
+                </tr>
+                <tr>
+                    <td><input type="submit" name="operation" value="register"></td>
+            
+                </tr>
+                <table>
+                </form>
+         
+        </center>
+    </body>
+</html>
+
+===>customer-->login.blade.php
+
+<html>
+    <head>
+
+    </head>
+    <body>
+        <center>
+            <h1>Login Page</h1>
+            <form method="post" action="{{URL::to("loginchecktwo")}}" enctype="multipart/form-data">
+                @csrf
+                <table>
+                <tr>
+                    <td>UserName:</td>
+                    <td><input type="text" name="txtusername"></td>
+                </tr>
+                <tr>
+                    <td>Password:</td>
+                    <td><input type="password" name="txtpassword"></td>
+                </tr>
+                <tr>
+                    <td><input type="submit" name="operation" value="login"></td>
+            
+                </tr>
+                <tr>
+                    <td><a href="index">Don't have register</td>
+                </tr>
+                </table>
+            </form>
+        </center>
+    </body>
+</html>
+
+===customer-->product.blade.php
+<html>
+    <body>
+        <center>
+        <h1>Shopping Cart</h1>
+        <table border="1" align="center">
+            <tr>
+               <th>Product Name</th>
+               <th>Qty</th>
+    
+            </tr>
+            @foreach($Products as $p)
+            <tr>
+                     <td>{{$p->pname}}</td>
+                     <td>{{$p->qty}}</td>
+                     <td><button>Add</button></td>
+            </tr>
+            @endforeach
+        </table>
+
+         <a href="customerlogin">logout
+        </center>
+    </body>
+</html>
+
+
+===>web.php
+
+<?php
+
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\customer;
+use App\Http\Controllers\admincontroller;
+
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+|
+| Here is where you can register web routes for your application. These
+| routes are loaded by the RouteServiceProvider within a group which
+| contains the "web" middleware group. Now create something great!
+|
+*/
+
+Route::get('/customerlogin', function () {
+    return view('/customer/login');
+});
+Route::get("index",[customer::class,"index"]);
+Route::post("register",[customer::class,"register"]);
+Route::post("loginchecktwo",[customer::class,"loginchecktwo"]);
+Route::get("productdisplay",[customer::class,"productdisplay"]);
+
+Route::get("/admin",function(){
+    return view("/admin/login");
+});
+
+Route::post("logincheck",[admincontroller::class,"logincheck"]);
+Route::get("product",[admincontroller::class,"product"]);
+Route::post("productregister",[admincontroller::class,"productregister"]);
+Route::get("delete/{id}",[admincontroller::class,"delete"]);
+Route::get("edit/{id}",[admincontroller::class,"edit"]);
+Route::post("update",[admincontroller::class,"update"]);
+
+
+
+
